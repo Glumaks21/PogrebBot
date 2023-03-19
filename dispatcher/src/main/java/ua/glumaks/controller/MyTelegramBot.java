@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -22,21 +23,17 @@ public class MyTelegramBot extends TelegramLongPollingBot {
 
     private String botToken;
 
+    private final UpdateController updateController;
+
+
+    @PostConstruct
+    void init() {
+        updateController.registerBot(this);
+    }
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage() || !update.getMessage().hasText()) {
-            return;
-        }
-
-        SendMessage response = new SendMessage();
-        response.setChatId(update.getMessage().getChatId().toString());
-        response.setText("Hello from bot");
-        try {
-            execute(response);
-        } catch (TelegramApiException e) {
-            log.error(e.getMessage());
-        }
+        updateController.processUpdate(update);
     }
 
 
@@ -50,4 +47,13 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         return botToken;
     }
 
+    public void sendAnswerMessage(SendMessage message) {
+        if (message != null) {
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                 log.error(e.getMessage());
+            }
+        }
+    }
 }

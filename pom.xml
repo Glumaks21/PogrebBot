@@ -18,6 +18,7 @@
 
   <modules>
     <module>dispatcher</module>
+    <module>common-rabbit-mq</module>
   </modules>
 
   <properties>

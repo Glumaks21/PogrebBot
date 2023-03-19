@@ -22,6 +22,11 @@
             <artifactId>telegrambots-spring-boot-starter</artifactId>
             <version>${telegrambot.starter.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ua.glumaks</groupId>
+            <artifactId>common-rabbit-mq</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
