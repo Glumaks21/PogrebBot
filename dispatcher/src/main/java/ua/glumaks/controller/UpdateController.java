@@ -60,7 +60,7 @@ public class UpdateController {
     }
 
     private void sendView(SendMessage sendMessage) {
-        telegramBot.sendAnswerMessage(sendMessage);
+        telegramBot.setView(sendMessage);
     }
 
     private void processTextMessage(Update update) {

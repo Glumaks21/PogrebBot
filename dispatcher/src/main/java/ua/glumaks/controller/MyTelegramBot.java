@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -16,14 +15,15 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @RequiredArgsConstructor
 public class MyTelegramBot extends TelegramLongPollingBot {
 
-    @Value("${bot.name}")
-    private String botName;
+    private final UpdateController updateController;
+
+    @Value("${bot.username}")
+    private String username;
 
     @Value("${bot.token}")
 
-    private String botToken;
+    private String token;
 
-    private final UpdateController updateController;
 
 
     @PostConstruct
@@ -39,15 +39,15 @@ public class MyTelegramBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return botName;
+        return username;
     }
 
     @Override
     public String getBotToken() {
-        return botToken;
+        return token;
     }
 
-    public void sendAnswerMessage(SendMessage message) {
+    public void setView(SendMessage message) {
         if (message != null) {
             try {
                 execute(message);
