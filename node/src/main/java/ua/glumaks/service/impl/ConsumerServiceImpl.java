@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.glumaks.service.ConsumerService;
-import ua.glumaks.service.producerService;
+import ua.glumaks.service.MainService;
 
 import static ua.glumaks.RabbitQueue.*;
 
@@ -17,19 +15,14 @@ import static ua.glumaks.RabbitQueue.*;
 @RequiredArgsConstructor
 public class ConsumerServiceImpl implements ConsumerService {
 
-    private final producerService producerService;
+    private final MainService mainService;
 
     @Override
     @RabbitListener(queues = TEXT_MESSAGE_UPDATE)
     public void consumeTextMessageUpdate(Update update) {
         log.debug("NODE: text message received: " + update);
 
-        Message originMessage = update.getMessage();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(originMessage.getChatId());
-        sendMessage.setText("Hello from node");
-
-        producerService.produceAnswer(sendMessage);
+        mainService.processTextMessage(update);
     }
 
     @Override
