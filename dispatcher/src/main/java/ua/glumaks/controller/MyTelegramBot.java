@@ -13,7 +13,7 @@ import ua.glumaks.config.TelegramBotConfigurationProperties;
 public class MyTelegramBot extends TelegramLongPollingBot {
 
     private final TelegramBotConfigurationProperties properties;
-    private final TypeFilter processor;
+    private final UpdateProcessor processor;
 
 
     @Override
