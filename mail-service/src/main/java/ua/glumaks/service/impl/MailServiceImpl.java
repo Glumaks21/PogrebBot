@@ -1,43 +1,43 @@
 package ua.glumaks.service.impl;
 
-import jakarta.mail.Message;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import ua.glumaks.config.EmailConfig;
 import ua.glumaks.dto.MailParams;
 import ua.glumaks.service.MailService;
 
-import java.text.MessageFormat;
+import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailServiceImpl implements MailService {
 
     private final JavaMailSender sender;
-    @Value("${spring.mail.username}")
-    private String mailFrom;
-
-    @Value("${service.activate.uri}")
-    private String activationUri;
-
+    private final EmailConfig config;
+    private final Validator validator;
 
     @Override
     public void send(MailParams mailParams) {
-        String subject = "Activation of account";
+        Set<ConstraintViolation<MailParams>> violations = validator.validate(mailParams);
+        if (!violations.isEmpty()) {
+            log.warn("Incorrect params: " + violations);
+            throw new ValidationException("Incorrect params: " + violations.toString());
+        }
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
+        message.setFrom(config.getFrom());
         message.setTo(mailParams.getEmailTo());
-        message.setSubject(subject);
-        message.setText(getActivationMailBody(mailParams.getId()));
+        message.setSubject(mailParams.getSubject());
+        message.setText(mailParams.getText());
 
         sender.send(message);
-    }
-
-    private String getActivationMailBody(String id) {
-        return ("To activate your account click on the link: " + activationUri).replace("{id}", id);
     }
 
 }

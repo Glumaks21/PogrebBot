@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import ua.glumaks.service.jms.CommandConsumerService;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import ua.glumaks.service.jms.ConsumerService;
 import ua.glumaks.service.MessageProcessor;
 
 import static ua.glumaks.RabbitQueue.*;
@@ -13,28 +13,28 @@ import static ua.glumaks.RabbitQueue.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ConsumerServiceImpl implements CommandConsumerService {
+public class ConsumerServiceImpl implements ConsumerService {
 
-    private final MessageProcessor mainService;
+    private final MessageProcessor processor;
 
     @Override
-    @RabbitListener(queues = TEXT_MESSAGE_UPDATE)
-    public void consumeTextMessageUpdate(Update update) {
-        log.debug("NODE: text message received: " + update);
-        mainService.processTextMessage(update);
+    @RabbitListener(queues = TEXT_MESSAGE)
+    public void consumeTextMessage(Message message) {
+        log.debug("NODE: text message received: " + message);
+        processor.processTextMessage(message);
     }
 
     @Override
-    @RabbitListener(queues = DOC_MESSAGE_UPDATE)
-    public void consumeDocMessageUpdate(Update update) {
-        log.debug("NODE: doc message received: " + update);
-        mainService.processDocMessage(update);
+    @RabbitListener(queues = DOC_MESSAGE)
+    public void consumeDocMessage(Message message) {
+        log.debug("NODE: doc message received: " + message);
+        processor.processDocMessage(message);
     }
 
     @Override
-    @RabbitListener(queues = PHOTO_MESSAGE_UPDATE)
-    public void consumePhotoMessageUpdate(Update update) {
-        log.debug("NODE: photo message received: " + update);
-        mainService.processPhotoMessage(update);
+    @RabbitListener(queues = PHOTO_MESSAGE)
+    public void consumePhotoMessage(Message message) {
+        log.debug("NODE: photo message received: " + message);
+        processor.processPhotoMessage(message);
     }
 }

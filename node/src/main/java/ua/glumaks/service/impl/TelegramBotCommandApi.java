@@ -12,5 +12,4 @@ public class TelegramBotCommandApi extends DefaultAbsSender {
         super(new DefaultBotOptions(), token);
     }
 
-
 }

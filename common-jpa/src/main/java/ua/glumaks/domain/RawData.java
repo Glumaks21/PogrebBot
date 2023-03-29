@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.util.Objects;
 
@@ -25,7 +25,7 @@ public class RawData {
 
     @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")
-    private Update update;
+    private Message message;
 
 
     @Override

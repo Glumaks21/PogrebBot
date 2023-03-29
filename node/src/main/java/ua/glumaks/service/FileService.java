@@ -9,6 +9,6 @@ public interface FileService {
 
     AppDocument downloadAppDocument(Message message);
     AppPhoto downloadAppPhoto(Message message);
+    String generateLink(Long docId, RestPathType linkType);
 
-    String generateLink(Long docId, LinkType linkType);
 }

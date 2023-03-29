@@ -2,7 +2,6 @@ package ua.glumaks.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.postgresql.shaded.com.ongres.scram.common.util.CryptoUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -17,11 +16,11 @@ import ua.glumaks.domain.AppDocument;
 import ua.glumaks.domain.AppPhoto;
 import ua.glumaks.domain.BinaryContent;
 import ua.glumaks.exceptions.FileNotFoundException;
-import ua.glumaks.rpository.AppDocumentRepo;
-import ua.glumaks.rpository.AppPhotoRepo;
+import ua.glumaks.repository.AppDocumentRepo;
+import ua.glumaks.repository.AppPhotoRepo;
 import ua.glumaks.service.FileService;
-import ua.glumaks.service.LinkType;
-import ua.glumaks.utils.HashUtil;
+import ua.glumaks.service.RestPathType;
+import ua.glumaks.utils.CryptoUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,16 +35,14 @@ public class FileServiceImpl implements FileService {
     private final AppPhotoRepo photoRepo;
     private final TelegramBotCommandApi api;
 
-    @Value("${link.address}")
-    private String linkAddress;
+    @Value("${service.rest-service.url}")
+    private String restServiceUrl;
 
-    private final HashUtil hashUtil;
+    private final CryptoUtil hashUtil;
 
 
     @Override
     public AppDocument downloadAppDocument(Message message) {
-        Assert.isTrue(message.hasDocument(), "Message doesn't contain a document");
-
         try {
             Document document = message.getDocument();
             byte[] fileInByte = getFileBytes(document.getFileId());
@@ -72,7 +69,6 @@ public class FileServiceImpl implements FileService {
             throw new FileNotFoundException("Error is occurred while downloading the file", e);
         }
     }
-
 
     private AppDocument convertToAppDocument(Document document, byte[] bytes) {
         BinaryContent binaryContent = BinaryContent.builder()
@@ -118,8 +114,8 @@ public class FileServiceImpl implements FileService {
 
 
     @Override
-    public String generateLink(Long docId, LinkType linkType) {
-        return "http://" + linkAddress + "/" + linkType +
+    public String generateLink(Long docId, RestPathType linkType) {
+        return restServiceUrl + "/" + linkType +
                 "?id=" + hashUtil.encode(docId.toString());
     }
 

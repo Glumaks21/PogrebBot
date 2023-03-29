@@ -3,20 +3,21 @@ package ua.glumaks.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.glumaks.domain.*;
 import ua.glumaks.exceptions.FileNotFoundException;
-import ua.glumaks.rpository.RawDataRepo;
-import ua.glumaks.rpository.AppUserRepo;
+import ua.glumaks.repository.AppUserRepo;
+import ua.glumaks.repository.RawDataRepo;
 import ua.glumaks.service.*;
-import ua.glumaks.service.jms.AnswerProducerService;
+import ua.glumaks.service.jms.ProducerService;
+import ua.glumaks.service.state.State;
+import ua.glumaks.util.StateSpringUtil;
 
-import java.util.Optional;
 
 import static ua.glumaks.domain.UserState.BASIC_STATE;
-import static ua.glumaks.service.Command.*;
+import static ua.glumaks.service.command.CommandType.*;
+import static ua.glumaks.util.MessageUtils.createSendMessage;
 
 @Service
 @Slf4j
@@ -25,155 +26,104 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     private final RawDataRepo rawDataRepo;
     private final AppUserRepo userRepo;
-
     private final FileService fileService;
-    private final AppUserService appUserService;
-    private final AnswerProducerService producerService;
+    private final AppUserService userService;
+    private final ProducerService producer;
+
 
     @Override
-    public void processTextMessage(Update update) {
-        String output = null;
+    public void processTextMessage(Message message) {
         try {
-            saveRawData(update);
+            saveRawData(message);
 
-            Message message = update.getMessage();
-            AppUser appUser = appUserService.findOrSaveAppUser(message.getFrom());
+            AppUser user = userService.findOrSaveAppUser(message.getFrom());
+            UserState userState = user.getState();
 
-            Optional<Command> cmd = Command.forCommand(message.getText());
-            if (cmd.isEmpty()) {
-                output = "Unknown command! To check command list enter /help";
-                return;
-            }
+            State state = StateSpringUtil.forType(userState);
+            BotApiMethod<?> answer = state.process(user, message);
 
-            output = processCommand(appUser, cmd.get());
+            producer.produce(answer);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            output = "Ooops...something goes wrong";
-        } finally {
-            sendAnswer(output, update);
+            producer.produce(createSendMessage(
+                    "Ooops...something goes wrong", message)
+            );
         }
     }
 
-    private void saveRawData(Update update) {
-        var rawData = RawData.builder()
-                .update(update)
+    private void saveRawData(Message message) {
+        RawData rawData = RawData.builder()
+                .message(message)
                 .build();
 
         rawDataRepo.save(rawData);
     }
 
-    private String processCommand(AppUser appUser, Command command) {
-        if (CANCEL.equals(command)) {
-            return cancel(appUser, userRepo);
+
+    private BotApiMethod<?> cancel(AppUser user, Message message) {
+        user.setState(BASIC_STATE);
+        userRepo.save(user);
+
+        String answer = "You sre successful rolled up to basic state";
+        return createSendMessage(answer, message);
+    }
+
+
+    @Override
+    public void processDocMessage(Message message) {
+        saveRawData(message);
+
+        AppUser user = userService.findOrSaveAppUser(message.getFrom());
+
+        String answer;
+        if (user.getEmail() == null) {
+            answer = "You need be registered to upload photos, enter " + REGISTRATION + " to register";
+        } else if (user.getActivationCode() != null) {
+            answer = "Follow the link in the letter sent to your email to activate your account";
+        } else if (!BASIC_STATE.equals(user.getState())) {
+            answer = "Cancel the current operation with " + CANCEL + " to load a content";
+        } else {
+
+            try {
+                AppDocument doc = fileService.downloadAppDocument(message);
+                String link = fileService.generateLink(doc.getId(), RestPathType.GET_DOC);
+                answer = "Document is successfully uploaded! Link for downloading: " + link;
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                answer = "Ooops...something goes wrong";
+            }
+
         }
 
-        UserState userState = appUser.getState();
-        return switch (userState) {
-            case BASIC_STATE -> processBasicCommands(appUser, command);
-            case WAIT_FOR_EMAIL_STATE -> ""; //TODO add email processing
-            default -> {
-                log.error("Unknown user state: " + userState);
-                throw new EnumConstantNotPresentException(UserState.class,
-                        "User state: " + userState);
-            }
-        };
-    }
-
-    private String cancel(AppUser appUser, AppUserRepo userRepository) {
-        appUser.setState(BASIC_STATE);
-        userRepository.save(appUser);
-        return "Successful";
-    }
-
-    private String processBasicCommands(AppUser appUser, Command command) {
-        return switch (command) {
-            case START -> start();
-            case REGISTRATION -> "НЕ НА ЧАСІ!";      //TODO add registration
-            case HELP -> help();
-            default -> {
-                log.error("Unknown command: " + command);
-                yield "Unknown command! To check command list enter /help";
-            }
-        };
-    }
-
-    private String start() {
-        return "Hello! To check command list enter /help";
-    }
-
-    private String help() {
-        return """
-                List of accessible commands:
-                /cancel - cancel execution of the current command
-                /registration - register a client
-                """;
+        producer.produce(createSendMessage(answer, message));
     }
 
     @Override
-    public void processDocMessage(Update update) {
-        saveRawData(update);
+    public void processPhotoMessage(Message message) {
+        saveRawData(message);
 
-        Message message = update.getMessage();
-        AppUser appUser = appUserService.findOrSaveAppUser(message.getFrom());
-
-        if (isNotAllowedToSendContent(update, appUser)) {
-            return;
-        }
+        AppUser user = userService.findOrSaveAppUser(message.getFrom());
 
         String answer;
-        try {
-            AppDocument doc = fileService.downloadAppDocument(message);
-            String link = fileService.generateLink(doc.getId(), LinkType.GET_DOC);
-            answer = "Document is successfully uploaded! Link for downloading: " + link;
-        } catch (FileNotFoundException e) {
-            log.error(e.getMessage(), e);
-            answer = "Sorry, failure to upload file";
-        }
-        sendAnswer(answer, update);
-    }
+        if (user.getEmail() == null) {
+            answer = "You need be registered to upload photos, enter " + REGISTRATION + " to register";
+        } else if (user.getActivationCode() != null) {
+            answer = "Follow the link in email address to activate your account";
+        } else if (!BASIC_STATE.equals(user.getState())) {
+            answer = "Cancel the current operation with " + CANCEL + " to load a content";
+        } else {
 
-    @Override
-    public void processPhotoMessage(Update update) {
-        saveRawData(update);
-
-        Message message = update.getMessage();
-        AppUser appUser = appUserService.findOrSaveAppUser(message.getFrom());
-
-        if (isNotAllowedToSendContent(update, appUser)) {
-            return;
+            try {
+                AppPhoto photo = fileService.downloadAppPhoto(message);
+                String link = fileService.generateLink(photo.getId(), RestPathType.GET_PHOTO);
+                answer = "Photo is successfully uploaded! Link for downloading: " + link;
+            } catch (FileNotFoundException e) {
+                log.error(e.getMessage(), e);
+                answer = "Ooops...something goes wrong";
+            }
         }
 
-        String answer;
-        try {
-            AppPhoto photo = fileService.downloadAppPhoto(message);
-            String link = fileService.generateLink(photo.getId(), LinkType.GET_PHOTO);
-            answer = "Photo is successfully loaded! Link for downloading: " + link;
-        } catch (FileNotFoundException e) {
-            log.error(e.getMessage(), e);
-            answer = "Sorry, failure to upload file";
-        }
-        sendAnswer(answer, update);
-    }
-
-    private boolean isNotAllowedToSendContent(Update update, AppUser appUser) {
-        UserState userState = appUser.getState();
-        if (!appUser.isActive()) {
-            sendAnswer("Register or activate your account to load a content", update);
-            return true;
-        } else if (!BASIC_STATE.equals(userState)) {
-            sendAnswer("Cancel the current operation with /cancel to load a content", update);
-            return true;
-        }
-
-        return false;
-    }
-
-
-    private void sendAnswer(String text, Update update) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText(text);
-        producerService.produceAnswer(sendMessage);
+        producer.produce(createSendMessage(answer, message));
     }
 
 }

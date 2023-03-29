@@ -1,0 +1,27 @@
+server:
+  port: 8002
+
+spring:
+  rabbitmq:
+    host: localhost
+    username: userok
+    password: p@ssw0rd
+    port: 5672
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pogreb
+    username: userok
+    password: p@ssw0rd
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+service:
+  rest-service:
+    url: http://127.0.0.1:8003
+  mail:
+    url: http://127.0.0.1:8004

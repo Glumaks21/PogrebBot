@@ -1,0 +1,18 @@
+server:
+  port: 8004
+
+spring:
+  mvc:
+    problemdetails:
+      enabled: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      protocol: smtp
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+

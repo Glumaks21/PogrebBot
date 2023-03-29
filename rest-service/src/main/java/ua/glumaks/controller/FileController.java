@@ -23,7 +23,7 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping("/doc")
-    ResponseEntity<FileSystemResource> getDocument(@RequestParam("id") String id) {
+    ResponseEntity<byte[]> getDocument(@RequestParam("id") String id) {
         //TODO add controller advice
         AppDocument document = fileService.getDocument(id);
         if (document == null) {
@@ -31,19 +31,14 @@ public class FileController {
         }
 
         BinaryContent binaryContent = document.getBinaryContent();
-        FileSystemResource systemResource = fileService.getFileSystemResource(binaryContent);
-        if (fileService == null) {
-            throw new IllegalStateException("Failure to load file");
-        }
-
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(document.getMimeType()))
                 .header("Content-disposition", "attachment; filename=" + document.getDocName())
-                .body(systemResource);
+                .body(binaryContent.getFileAsArrayOfBytes());
     }
 
     @GetMapping("/photo")
-    ResponseEntity<FileSystemResource> getPhoto(@RequestParam("id") String id) {
+    ResponseEntity<byte[]> getPhoto(@RequestParam("id") String id) {
         //TODO add controller advice
         AppPhoto photo = fileService.getPhoto(id);
         if (photo == null) {
@@ -51,15 +46,10 @@ public class FileController {
         }
 
         BinaryContent binaryContent = photo.getBinaryContent();
-        FileSystemResource systemResource = fileService.getFileSystemResource(binaryContent);
-        if (fileService == null) {
-            throw new IllegalStateException("Failure to load file");
-        }
-
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .header("Content-disposition", "attachment;")
-                .body(systemResource);
+                .body(binaryContent.getFileAsArrayOfBytes());
     }
 
 }

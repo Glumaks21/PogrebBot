@@ -1,6 +1,7 @@
 package ua.glumaks.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,8 +37,11 @@ public class AppUser {
     private String firstName;
     private String lastName;
     private String username;
+
+    @Email(message = "Incorrect email")
     private String email;
-    private boolean isActive;
+
+    private String activationCode;
 
     @Enumerated(EnumType.STRING)
     private UserState state;
@@ -55,4 +59,9 @@ public class AppUser {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    public boolean isActive() {
+        return activationCode != null;
+    }
+
 }

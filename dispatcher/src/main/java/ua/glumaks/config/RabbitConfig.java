@@ -18,17 +18,17 @@ public class RabbitConfig {
 
     @Bean
     Queue textMessageQueue() {
-        return new Queue(TEXT_MESSAGE_UPDATE);
+        return new Queue(TEXT_MESSAGE);
     }
 
     @Bean
     Queue docMessageQueue() {
-        return new Queue(DOC_MESSAGE_UPDATE);
+        return new Queue(DOC_MESSAGE);
     }
 
     @Bean
     Queue photoMessageQueue() {
-        return new Queue(PHOTO_MESSAGE_UPDATE);
+        return new Queue(PHOTO_MESSAGE);
     }
 
     @Bean

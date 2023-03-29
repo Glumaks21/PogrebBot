@@ -1,0 +1,16 @@
+spring:
+  rabbitmq:
+    host: localhost
+    username: userok
+    password: p@ssw0rd
+    port: 5672
+
+telegram:
+  bot:
+    username: pogreb_tbot
+    url: e061-195-170-179-124.eu.ngrok.io
+    path: /update
+
+server:
+  port: 8001
+

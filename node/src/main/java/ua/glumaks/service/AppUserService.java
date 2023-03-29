@@ -5,5 +5,8 @@ import ua.glumaks.domain.AppUser;
 
 
 public interface AppUserService {
+
+    void register(AppUser appUser, String email);
     AppUser findOrSaveAppUser(User user);
+
 }
