@@ -27,8 +27,8 @@ public class StateSpringUtil {
             case BASIC_STATE -> context.getBean(BasicState.class);
             case WAIT_FOR_EMAIL_STATE -> context.getBean(WaitingForEmailState.class);
             default -> {
-                log.error("Unknown command type: " + type);
-                throw new EnumConstantNotPresentException(CommandType.class, type.name());
+                log.error("Unknown state type: " + type);
+                throw new EnumConstantNotPresentException(UserState.class, type.name());
             }
         };
     }

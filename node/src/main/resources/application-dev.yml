@@ -1,6 +1,3 @@
-server:
-  port: 8002
-
 spring:
   rabbitmq:
     host: localhost
@@ -8,6 +5,7 @@ spring:
     password: p@ssw0rd
     port: 5672
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/pogreb
     username: userok
     password: p@ssw0rd

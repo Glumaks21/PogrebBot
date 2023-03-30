@@ -1,6 +1,3 @@
-server:
-  port: 8003
-
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/pogreb

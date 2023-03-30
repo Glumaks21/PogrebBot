@@ -33,7 +33,7 @@ public class RabbitConfig {
 
     @Bean
     Queue answerMessageQueue() {
-        return new Queue(ANSWER_MESSAGE);
+        return new Queue(ANSWER_BOT_API_METHOD);
     }
 
 }

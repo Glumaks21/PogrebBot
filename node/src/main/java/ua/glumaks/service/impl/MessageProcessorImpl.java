@@ -3,21 +3,18 @@ package ua.glumaks.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import ua.glumaks.domain.*;
 import ua.glumaks.exceptions.FileNotFoundException;
 import ua.glumaks.repository.AppUserRepo;
 import ua.glumaks.repository.RawDataRepo;
 import ua.glumaks.service.*;
-import ua.glumaks.service.jms.ProducerService;
 import ua.glumaks.service.state.State;
 import ua.glumaks.util.StateSpringUtil;
 
-
 import static ua.glumaks.domain.UserState.BASIC_STATE;
-import static ua.glumaks.service.command.CommandType.*;
-import static ua.glumaks.util.MessageUtils.createSendMessage;
+import static ua.glumaks.service.command.CommandType.CANCEL;
+import static ua.glumaks.service.command.CommandType.REGISTRATION;
 
 @Service
 @Slf4j
@@ -28,7 +25,7 @@ public class MessageProcessorImpl implements MessageProcessor {
     private final AppUserRepo userRepo;
     private final FileService fileService;
     private final AppUserService userService;
-    private final ProducerService producer;
+    private final TelegramService telegramService;
 
 
     @Override
@@ -40,14 +37,11 @@ public class MessageProcessorImpl implements MessageProcessor {
             UserState userState = user.getState();
 
             State state = StateSpringUtil.forType(userState);
-            BotApiMethod<?> answer = state.process(user, message);
-
-            producer.produce(answer);
+            state.process(user, message);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            producer.produce(createSendMessage(
-                    "Ooops...something goes wrong", message)
-            );
+            String answer = "Ooops...something goes wrong";
+            telegramService.sendMessage(message.getChatId(), answer);
         }
     }
 
@@ -58,16 +52,6 @@ public class MessageProcessorImpl implements MessageProcessor {
 
         rawDataRepo.save(rawData);
     }
-
-
-    private BotApiMethod<?> cancel(AppUser user, Message message) {
-        user.setState(BASIC_STATE);
-        userRepo.save(user);
-
-        String answer = "You sre successful rolled up to basic state";
-        return createSendMessage(answer, message);
-    }
-
 
     @Override
     public void processDocMessage(Message message) {
@@ -95,7 +79,7 @@ public class MessageProcessorImpl implements MessageProcessor {
 
         }
 
-        producer.produce(createSendMessage(answer, message));
+        telegramService.sendMessage(message.getChatId(), answer);
     }
 
     @Override
@@ -123,7 +107,7 @@ public class MessageProcessorImpl implements MessageProcessor {
             }
         }
 
-        producer.produce(createSendMessage(answer, message));
+        telegramService.sendMessage(message.getChatId(), answer);
     }
 
 }

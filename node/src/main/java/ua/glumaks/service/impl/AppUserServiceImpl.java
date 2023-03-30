@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.objects.User;
 import ua.glumaks.domain.AppUser;
 import ua.glumaks.dto.MailParams;
-import ua.glumaks.exceptions.EmailServiceException;
+import ua.glumaks.exceptions.MailServiceException;
 import ua.glumaks.repository.AppUserRepo;
 import ua.glumaks.service.AppUserService;
 
@@ -60,13 +60,13 @@ public class AppUserServiceImpl implements AppUserService {
                 user.setEmail(null);
                 user.setActivationCode(null);
                 repo.save(user);
-                throw new EmailServiceException("Bad response: " + response);
+                throw new MailServiceException("Bad response: " + response);
             }
         } catch (ResourceAccessException e) {
             user.setEmail(null);
             user.setActivationCode(null);
             repo.save(user);
-            throw new EmailServiceException("Can't access a resource, server may not be running", e);
+            throw new MailServiceException("Can't access a resource, server may not be running", e);
         }
     }
 

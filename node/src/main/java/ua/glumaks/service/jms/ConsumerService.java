@@ -4,8 +4,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 public interface ConsumerService {
 
-    void consumeTextMessage(Message message);
-    void consumeDocMessage(Message message);
-    void consumePhotoMessage(Message message);
+    void consumeTextMessageUpdate(Message message);
+    void consumeDocMessageUpdate(Message message);
+    void consumePhotoMessageUpdate(Message message);
 
 }

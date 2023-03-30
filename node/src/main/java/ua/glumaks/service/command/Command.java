@@ -7,6 +7,6 @@ import ua.glumaks.domain.AppUser;
 
 public interface Command {
 
-    BotApiMethod<?> execute(AppUser user, Message message);
+    void execute(AppUser user, Message message);
 
 }

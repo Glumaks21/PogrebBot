@@ -17,7 +17,7 @@ public class WebHookController {
     private final TelegramWebhookBot bot;
 
 
-    @PostMapping("/callback/update")
+    @PostMapping(value = "/callback/update", consumes = "application/json")
     BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return bot.onWebhookUpdateReceived(update);
     }

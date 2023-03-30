@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.glumaks.service.jms.ProducerService;
 
 @Service
@@ -16,9 +17,9 @@ public class ProducerServiceImpl implements ProducerService {
 
 
     @Override
-    public void produce(String rabbitQueue, Message message) {
-        log.debug("Send message to nodes: " + message);
-        template.convertAndSend(rabbitQueue, message);
+    public void produce(String queue, Message message) {
+        log.debug("Send to queue {} a message: {}", queue, message);
+        template.convertAndSend(queue, message);
     }
 
 }

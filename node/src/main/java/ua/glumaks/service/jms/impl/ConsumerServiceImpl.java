@@ -19,21 +19,21 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     @RabbitListener(queues = TEXT_MESSAGE)
-    public void consumeTextMessage(Message message) {
+    public void consumeTextMessageUpdate(Message message) {
         log.debug("NODE: text message received: " + message);
         processor.processTextMessage(message);
     }
 
     @Override
     @RabbitListener(queues = DOC_MESSAGE)
-    public void consumeDocMessage(Message message) {
+    public void consumeDocMessageUpdate(Message message) {
         log.debug("NODE: doc message received: " + message);
         processor.processDocMessage(message);
     }
 
     @Override
     @RabbitListener(queues = PHOTO_MESSAGE)
-    public void consumePhotoMessage(Message message) {
+    public void consumePhotoMessageUpdate(Message message) {
         log.debug("NODE: photo message received: " + message);
         processor.processPhotoMessage(message);
     }

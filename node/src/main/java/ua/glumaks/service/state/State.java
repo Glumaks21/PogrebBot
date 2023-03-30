@@ -6,6 +6,6 @@ import ua.glumaks.domain.AppUser;
 
 public interface State {
 
-    BotApiMethod<?> process(AppUser user, Message message);
+    void process(AppUser user, Message message);
 
 }

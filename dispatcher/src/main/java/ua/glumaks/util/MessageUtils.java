@@ -6,9 +6,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 public class MessageUtils {
 
-    public static SendMessage createSendMessage(String text, Message message) {
+    public static SendMessage createSendMessage(Long chatId, String text) {
         return SendMessage.builder()
-                .chatId(message.getChatId())
+                .chatId(chatId)
                 .text(text)
                 .build();
     }
